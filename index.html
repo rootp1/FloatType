@@ -1,13 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
-  <script src="script.js"></script>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  hiii we're arnav and sanvi
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat Input</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+    />
+  </head>
+  <body class="bg-gray-100 p-6">
+    <div class="max-w-2xl mx-auto">
+      <div
+        class="flex items-center bg-white rounded-full shadow-md px-4 py-2 space-x-4"
+      >
+        <button class="text-gray-500 hover:text-blue-600 text-xl">
+          <i class="bi bi-mic"></i>
+        </button>
+        <input
+          type="text"
+          placeholder="Type a message..."
+          class="flex-1 outline-none border-none text-gray-800 bg-transparent placeholder-gray-400"
+        />
+        <div class="flex items-center space-x-4">
+          <button class="text-gray-500 hover:text-blue-600 text-xl" title="Camera">
+            <i class="bi bi-camera"></i>
+          </button>
+          <button class="text-gray-500 hover:text-blue-600 text-xl">
+            <i class="bi bi-paperclip"></i>
+          </button>
+          <button class="text-gray-500 hover:text-blue-600 text-xl">
+            <i class="bi bi-send"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </body>
 </html>
