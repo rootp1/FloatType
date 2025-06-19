@@ -13,6 +13,7 @@ class SmartInputBox {
   async init() {
     await this.loadSettings();
     this.createFloatingBox();
+    this.setupEventListeners();
     console.log('Smart Input Box initialized');
   }
 
@@ -56,6 +57,7 @@ class SmartInputBox {
       max-width: 80vw;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     `;
+
     const header = document.createElement('div');
     header.style.cssText = `
       display: flex;
@@ -65,9 +67,11 @@ class SmartInputBox {
       font-size: 12px;
       color: #666;
     `;
+
     const title = document.createElement('span');
     title.textContent = '📝 Smart Input Box (Habit Mode)';
     title.style.fontWeight = '500';
+
     const closeBtn = document.createElement('button');
     closeBtn.textContent = '✕';
     closeBtn.style.cssText = `
@@ -84,8 +88,10 @@ class SmartInputBox {
       justify-content: center;
     `;
     closeBtn.onclick = () => this.hideFloatingBox();
+
     header.appendChild(title);
     header.appendChild(closeBtn);
+
     this.floatingInput = document.createElement('textarea');
     this.floatingInput.className = 'smart-input-floating-input';
     this.floatingInput.style.cssText = `
@@ -102,6 +108,7 @@ class SmartInputBox {
       box-sizing: border-box;
     `;
     this.floatingInput.placeholder = 'Type here - synced with focused input...';
+
     const info = document.createElement('div');
     info.style.cssText = `
       margin-top: 6px;
@@ -110,10 +117,33 @@ class SmartInputBox {
       text-align: center;
     `;
     info.textContent = 'Ctrl+Shift+H to toggle • ESC to close';
+
     this.floatingBox.appendChild(header);
     this.floatingBox.appendChild(this.floatingInput);
     this.floatingBox.appendChild(info);
     document.body.appendChild(this.floatingBox);
+  }
+
+  setupEventListeners() {
+    document.addEventListener('focusin', (e) => {
+      if (!this.isEnabled || !this.habitModeEnabled) return;
+      const target = e.target;
+      if (this.isInputElement(target) && target !== this.floatingInput) {
+        this.handleInputFocus(target);
+      }
+    });
+
+    document.addEventListener('focusout', () => {
+      setTimeout(() => {
+        if (!this.isFloatingActive && document.activeElement !== this.floatingInput) {
+          this.hideFloatingBox();
+        }
+      }, 100);
+    });
+
+    this.floatingInput.addEventListener('input', () => {
+      if (!this.syncInProgress) this.syncToOriginal();
+    });
   }
 
   hideFloatingBox() {
@@ -121,6 +151,44 @@ class SmartInputBox {
     this.floatingBox.style.display = 'none';
     this.isFloatingActive = false;
     this.currentInput = null;
+  }
+
+  isInputElement(element) {
+    if (!element) return false;
+    const tagName = element.tagName.toLowerCase();
+    const type = element.type ? element.type.toLowerCase() : '';
+    return (
+      tagName === 'textarea' ||
+      (tagName === 'input' && ['text', 'password', 'email', 'search', 'tel', 'url', 'number'].includes(type)) ||
+      element.contentEditable === 'true' ||
+      element.isContentEditable
+    );
+  }
+
+  handleInputFocus(input) {
+    this.currentInput = input;
+    this.showFloatingBox();
+    this.syncFromOriginal();
+    setTimeout(() => {
+      this.floatingInput.focus();
+      this.floatingInput.setSelectionRange(
+        this.floatingInput.value.length,
+        this.floatingInput.value.length
+      );
+    }, 50);
+  }
+
+  showFloatingBox() {
+    if (!this.floatingBox) return;
+    this.floatingBox.style.display = 'block';
+    this.isFloatingActive = true;
+    this.floatingBox.style.opacity = '0';
+    this.floatingBox.style.transform = 'translateX(-50%) translateY(-10px)';
+    setTimeout(() => {
+      this.floatingBox.style.transition = 'all 0.2s ease-out';
+      this.floatingBox.style.opacity = '1';
+      this.floatingBox.style.transform = 'translateX(-50%) translateY(0)';
+    }, 10);
   }
 }
 
