@@ -58,7 +58,6 @@ class SmartInputBox {
       max-width: 80vw;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     `;
-
     const header = document.createElement("div");
     header.style.cssText = `
       display: flex;
@@ -68,11 +67,9 @@ class SmartInputBox {
       font-size: 12px;
       color: #666;
     `;
-
     const title = document.createElement("span");
     title.textContent = "📝 Smart Input Box (Habit Mode)";
     title.style.fontWeight = "500";
-
     const closeBtn = document.createElement("button");
     closeBtn.textContent = "✕";
     closeBtn.style.cssText = `
@@ -89,10 +86,8 @@ class SmartInputBox {
       justify-content: center;
     `;
     closeBtn.onclick = () => this.hideFloatingBox();
-
     header.appendChild(title);
     header.appendChild(closeBtn);
-
     this.floatingInput = document.createElement("textarea");
     this.floatingInput.className = "smart-input-floating-input";
     this.floatingInput.style.cssText = `
@@ -109,7 +104,6 @@ class SmartInputBox {
       box-sizing: border-box;
     `;
     this.floatingInput.placeholder = "Type here - synced with focused input...";
-
     const info = document.createElement("div");
     info.style.cssText = `
       margin-top: 6px;
@@ -118,7 +112,6 @@ class SmartInputBox {
       text-align: center;
     `;
     info.textContent = "Ctrl+Shift+H to toggle • ESC to close";
-
     this.floatingBox.appendChild(header);
     this.floatingBox.appendChild(this.floatingInput);
     this.floatingBox.appendChild(info);
@@ -133,8 +126,8 @@ class SmartInputBox {
         this.handleInputFocus(target);
       }
     });
-
-    document.addEventListener("focusout", () => {
+    document.addEventListener("focusout", (e) => {
+      if (!this.isEnabled || !this.habitModeEnabled) return;
       setTimeout(() => {
         if (
           !this.isFloatingActive &&
@@ -144,9 +137,46 @@ class SmartInputBox {
         }
       }, 100);
     });
-
-    this.floatingInput.addEventListener("input", () => {
-      if (!this.syncInProgress) this.syncToOriginal();
+    this.floatingInput.addEventListener("input", (e) => {
+      if (this.syncInProgress) return;
+      this.syncToOriginal();
+    });
+    this.floatingInput.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        this.hideFloatingBox();
+        if (this.currentInput) {
+          this.currentInput.focus();
+        }
+      }
+      if (e.key === "Enter" && !e.shiftKey) {
+        if (
+          this.currentInput &&
+          this.currentInput.tagName.toLowerCase() === "input"
+        ) {
+          e.preventDefault();
+          this.syncToOriginal();
+          const enterEvent = new KeyboardEvent("keydown", {
+            key: "Enter",
+            keyCode: 13,
+            which: 13,
+            bubbles: true,
+          });
+          this.currentInput.dispatchEvent(enterEvent);
+        }
+      }
+    });
+    this.floatingBox.addEventListener("click", (e) => {
+      e.stopPropagation();
+    });
+    document.addEventListener("click", (e) => {
+      if (
+        this.floatingBox &&
+        this.floatingBox.style.display !== "none" &&
+        !this.floatingBox.contains(e.target) &&
+        !this.isInputElement(e.target)
+      ) {
+        this.hideFloatingBox();
+      }
     });
   }
 
@@ -160,59 +190,14 @@ class SmartInputBox {
         e.preventDefault();
         this.toggleHabitMode();
       }
-      if (e.key === "Escape" && this.floatingBox?.style.display !== "none") {
+      if (
+        e.key === "Escape" &&
+        this.floatingBox &&
+        this.floatingBox.style.display !== "none"
+      ) {
         this.hideFloatingBox();
       }
     });
-  }
-
-  toggleExtension() {
-    this.isEnabled = !this.isEnabled;
-    this.saveSettings();
-    if (!this.isEnabled) this.hideFloatingBox();
-    this.showNotification(
-      `Extension ${this.isEnabled ? "enabled" : "disabled"}`
-    );
-  }
-
-  toggleHabitMode() {
-    this.habitModeEnabled = !this.habitModeEnabled;
-    this.saveSettings();
-    if (!this.habitModeEnabled) this.hideFloatingBox();
-    this.showNotification(
-      `Habit Mode ${this.habitModeEnabled ? "enabled" : "disabled"}`
-    );
-  }
-
-  showNotification(message) {
-    const notification = document.createElement("div");
-    notification.style.cssText = `
-      position: fixed;
-      top: 60px;
-      right: 20px;
-      background: #333;
-      color: white;
-      padding: 12px 20px;
-      border-radius: 6px;
-      font-size: 14px;
-      z-index: 1000000;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      transition: all 0.3s ease;
-    `;
-    notification.textContent = message;
-    document.body.appendChild(notification);
-    setTimeout(() => {
-      notification.style.opacity = "0";
-      notification.style.transform = "translateX(100%)";
-      setTimeout(() => notification.remove(), 300);
-    }, 2000);
-  }
-
-  hideFloatingBox() {
-    if (!this.floatingBox) return;
-    this.floatingBox.style.display = "none";
-    this.isFloatingActive = false;
-    this.currentInput = null;
   }
 
   isInputElement(element) {
@@ -260,6 +245,117 @@ class SmartInputBox {
       this.floatingBox.style.opacity = "1";
       this.floatingBox.style.transform = "translateX(-50%) translateY(0)";
     }, 10);
+  }
+
+  hideFloatingBox() {
+    if (!this.floatingBox) return;
+    this.floatingBox.style.transition = "all 0.15s ease-in";
+    this.floatingBox.style.opacity = "0";
+    this.floatingBox.style.transform = "translateX(-50%) translateY(-10px)";
+    setTimeout(() => {
+      this.floatingBox.style.display = "none";
+      this.isFloatingActive = false;
+      this.currentInput = null;
+    }, 150);
+  }
+
+  syncFromOriginal() {
+    if (!this.currentInput || this.syncInProgress) return;
+    this.syncInProgress = true;
+    try {
+      let value = "";
+      if (
+        this.currentInput.tagName.toLowerCase() === "textarea" ||
+        this.currentInput.tagName.toLowerCase() === "input"
+      ) {
+        value = this.currentInput.value;
+      } else if (this.currentInput.contentEditable === "true") {
+        value = this.currentInput.textContent || this.currentInput.innerText;
+      }
+      this.floatingInput.value = value;
+      this.adjustFloatingInputHeight();
+    } finally {
+      this.syncInProgress = false;
+    }
+  }
+
+  syncToOriginal() {
+    if (!this.currentInput || this.syncInProgress) return;
+    this.syncInProgress = true;
+    try {
+      const value = this.floatingInput.value;
+      if (
+        this.currentInput.tagName.toLowerCase() === "textarea" ||
+        this.currentInput.tagName.toLowerCase() === "input"
+      ) {
+        this.currentInput.value = value;
+        const inputEvent = new Event("input", { bubbles: true });
+        const changeEvent = new Event("change", { bubbles: true });
+        this.currentInput.dispatchEvent(inputEvent);
+        this.currentInput.dispatchEvent(changeEvent);
+      } else if (this.currentInput.contentEditable === "true") {
+        this.currentInput.textContent = value;
+        const inputEvent = new Event("input", { bubbles: true });
+        this.currentInput.dispatchEvent(inputEvent);
+      }
+      this.adjustFloatingInputHeight();
+    } finally {
+      this.syncInProgress = false;
+    }
+  }
+
+  adjustFloatingInputHeight() {
+    if (!this.floatingInput) return;
+    this.floatingInput.style.height = "auto";
+    const scrollHeight = this.floatingInput.scrollHeight;
+    const maxHeight = 200;
+    this.floatingInput.style.height = Math.min(scrollHeight, maxHeight) + "px";
+  }
+
+  toggleExtension() {
+    this.isEnabled = !this.isEnabled;
+    this.saveSettings();
+    if (!this.isEnabled) {
+      this.hideFloatingBox();
+    }
+    this.showNotification(
+      `Extension ${this.isEnabled ? "enabled" : "disabled"}`
+    );
+  }
+
+  toggleHabitMode() {
+    this.habitModeEnabled = !this.habitModeEnabled;
+    this.saveSettings();
+    if (!this.habitModeEnabled) {
+      this.hideFloatingBox();
+    }
+    this.showNotification(
+      `Habit Mode ${this.habitModeEnabled ? "enabled" : "disabled"}`
+    );
+  }
+
+  showNotification(message) {
+    const notification = document.createElement("div");
+    notification.style.cssText = `
+      position: fixed;
+      top: 60px;
+      right: 20px;
+      background: #333;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 6px;
+      font-size: 14px;
+      z-index: 1000000;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      transition: all 0.3s ease;
+    `;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    setTimeout(() => {
+      notification.style.opacity = "0";
+      notification.style.transform = "translateX(100%)";
+      setTimeout(() => notification.remove(), 300);
+    }, 2000);
   }
 }
 
