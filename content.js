@@ -12,6 +12,7 @@ class SmartInputBox {
 
   async init() {
     await this.loadSettings();
+    this.createFloatingBox();
     console.log('Smart Input Box initialized');
   }
 
@@ -34,6 +35,92 @@ class SmartInputBox {
     } catch (error) {
       console.log('Failed to save settings');
     }
+  }
+
+  createFloatingBox() {
+    this.floatingBox = document.createElement('div');
+    this.floatingBox.className = 'smart-input-floating-container';
+    this.floatingBox.style.cssText = `
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 999999;
+      background: white;
+      border: 2px solid #4285f4;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      padding: 12px;
+      display: none;
+      min-width: 400px;
+      max-width: 80vw;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    `;
+    const header = document.createElement('div');
+    header.style.cssText = `
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 12px;
+      color: #666;
+    `;
+    const title = document.createElement('span');
+    title.textContent = '📝 Smart Input Box (Habit Mode)';
+    title.style.fontWeight = '500';
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = '✕';
+    closeBtn.style.cssText = `
+      background: none;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+      color: #666;
+      padding: 0;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    `;
+    closeBtn.onclick = () => this.hideFloatingBox();
+    header.appendChild(title);
+    header.appendChild(closeBtn);
+    this.floatingInput = document.createElement('textarea');
+    this.floatingInput.className = 'smart-input-floating-input';
+    this.floatingInput.style.cssText = `
+      width: 100%;
+      min-height: 40px;
+      max-height: 200px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      resize: vertical;
+      outline: none;
+      box-sizing: border-box;
+    `;
+    this.floatingInput.placeholder = 'Type here - synced with focused input...';
+    const info = document.createElement('div');
+    info.style.cssText = `
+      margin-top: 6px;
+      font-size: 11px;
+      color: #888;
+      text-align: center;
+    `;
+    info.textContent = 'Ctrl+Shift+H to toggle • ESC to close';
+    this.floatingBox.appendChild(header);
+    this.floatingBox.appendChild(this.floatingInput);
+    this.floatingBox.appendChild(info);
+    document.body.appendChild(this.floatingBox);
+  }
+
+  hideFloatingBox() {
+    if (!this.floatingBox) return;
+    this.floatingBox.style.display = 'none';
+    this.isFloatingActive = false;
+    this.currentInput = null;
   }
 }
 
