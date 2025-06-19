@@ -1,0 +1,50 @@
+{
+  "manifest_version": 2,
+  "name": "Smart Input Box",
+  "version": "1.0",
+  "description": "Brings input boxes to eye level with smart syncing",
+  
+  "permissions": [
+    "activeTab",
+    "<all_urls>",
+    "storage"
+  ],
+  
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["styles.css"],
+      "run_at": "document_end"
+    }
+  ],
+  
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": false
+  },
+  
+  "browser_action": {
+    "default_popup": "popup.html",
+    "default_title": "Smart Input Box Settings"
+  },
+  
+  "commands": {
+    "toggle-extension": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+I"
+      },
+      "description": "Toggle Smart Input Box extension"
+    },
+    "toggle-habit-mode": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+H"
+      },
+      "description": "Toggle Habit Mode"
+    }
+  },
+  
+  "web_accessible_resources": [
+    "styles.css"
+  ]
+}
