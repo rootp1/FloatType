@@ -14,16 +14,17 @@ class SmartInputBox {
     await this.loadSettings();
     this.createFloatingBox();
     this.setupEventListeners();
-    console.log('Smart Input Box initialized');
+    this.setupKeyboardShortcuts();
+    console.log("Smart Input Box initialized");
   }
 
   async loadSettings() {
     try {
-      const result = await browser.storage.sync.get(['enabled', 'habitMode']);
+      const result = await browser.storage.sync.get(["enabled", "habitMode"]);
       this.isEnabled = result.enabled !== false;
       this.habitModeEnabled = result.habitMode !== false;
     } catch (error) {
-      console.log('Failed to load settings, using defaults');
+      console.log("Failed to load settings, using defaults");
     }
   }
 
@@ -31,16 +32,16 @@ class SmartInputBox {
     try {
       await browser.storage.sync.set({
         enabled: this.isEnabled,
-        habitMode: this.habitModeEnabled
+        habitMode: this.habitModeEnabled,
       });
     } catch (error) {
-      console.log('Failed to save settings');
+      console.log("Failed to save settings");
     }
   }
 
   createFloatingBox() {
-    this.floatingBox = document.createElement('div');
-    this.floatingBox.className = 'smart-input-floating-container';
+    this.floatingBox = document.createElement("div");
+    this.floatingBox.className = "smart-input-floating-container";
     this.floatingBox.style.cssText = `
       position: fixed;
       top: 20px;
@@ -58,7 +59,7 @@ class SmartInputBox {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     `;
 
-    const header = document.createElement('div');
+    const header = document.createElement("div");
     header.style.cssText = `
       display: flex;
       justify-content: space-between;
@@ -68,12 +69,12 @@ class SmartInputBox {
       color: #666;
     `;
 
-    const title = document.createElement('span');
-    title.textContent = '📝 Smart Input Box (Habit Mode)';
-    title.style.fontWeight = '500';
+    const title = document.createElement("span");
+    title.textContent = "📝 Smart Input Box (Habit Mode)";
+    title.style.fontWeight = "500";
 
-    const closeBtn = document.createElement('button');
-    closeBtn.textContent = '✕';
+    const closeBtn = document.createElement("button");
+    closeBtn.textContent = "✕";
     closeBtn.style.cssText = `
       background: none;
       border: none;
@@ -92,8 +93,8 @@ class SmartInputBox {
     header.appendChild(title);
     header.appendChild(closeBtn);
 
-    this.floatingInput = document.createElement('textarea');
-    this.floatingInput.className = 'smart-input-floating-input';
+    this.floatingInput = document.createElement("textarea");
+    this.floatingInput.className = "smart-input-floating-input";
     this.floatingInput.style.cssText = `
       width: 100%;
       min-height: 40px;
@@ -107,16 +108,16 @@ class SmartInputBox {
       outline: none;
       box-sizing: border-box;
     `;
-    this.floatingInput.placeholder = 'Type here - synced with focused input...';
+    this.floatingInput.placeholder = "Type here - synced with focused input...";
 
-    const info = document.createElement('div');
+    const info = document.createElement("div");
     info.style.cssText = `
       margin-top: 6px;
       font-size: 11px;
       color: #888;
       text-align: center;
     `;
-    info.textContent = 'Ctrl+Shift+H to toggle • ESC to close';
+    info.textContent = "Ctrl+Shift+H to toggle • ESC to close";
 
     this.floatingBox.appendChild(header);
     this.floatingBox.appendChild(this.floatingInput);
@@ -125,7 +126,7 @@ class SmartInputBox {
   }
 
   setupEventListeners() {
-    document.addEventListener('focusin', (e) => {
+    document.addEventListener("focusin", (e) => {
       if (!this.isEnabled || !this.habitModeEnabled) return;
       const target = e.target;
       if (this.isInputElement(target) && target !== this.floatingInput) {
@@ -133,22 +134,83 @@ class SmartInputBox {
       }
     });
 
-    document.addEventListener('focusout', () => {
+    document.addEventListener("focusout", () => {
       setTimeout(() => {
-        if (!this.isFloatingActive && document.activeElement !== this.floatingInput) {
+        if (
+          !this.isFloatingActive &&
+          document.activeElement !== this.floatingInput
+        ) {
           this.hideFloatingBox();
         }
       }, 100);
     });
 
-    this.floatingInput.addEventListener('input', () => {
+    this.floatingInput.addEventListener("input", () => {
       if (!this.syncInProgress) this.syncToOriginal();
     });
   }
 
+  setupKeyboardShortcuts() {
+    document.addEventListener("keydown", (e) => {
+      if (e.ctrlKey && e.shiftKey && e.key === "I") {
+        e.preventDefault();
+        this.toggleExtension();
+      }
+      if (e.ctrlKey && e.shiftKey && e.key === "H") {
+        e.preventDefault();
+        this.toggleHabitMode();
+      }
+      if (e.key === "Escape" && this.floatingBox?.style.display !== "none") {
+        this.hideFloatingBox();
+      }
+    });
+  }
+
+  toggleExtension() {
+    this.isEnabled = !this.isEnabled;
+    this.saveSettings();
+    if (!this.isEnabled) this.hideFloatingBox();
+    this.showNotification(
+      `Extension ${this.isEnabled ? "enabled" : "disabled"}`
+    );
+  }
+
+  toggleHabitMode() {
+    this.habitModeEnabled = !this.habitModeEnabled;
+    this.saveSettings();
+    if (!this.habitModeEnabled) this.hideFloatingBox();
+    this.showNotification(
+      `Habit Mode ${this.habitModeEnabled ? "enabled" : "disabled"}`
+    );
+  }
+
+  showNotification(message) {
+    const notification = document.createElement("div");
+    notification.style.cssText = `
+      position: fixed;
+      top: 60px;
+      right: 20px;
+      background: #333;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 6px;
+      font-size: 14px;
+      z-index: 1000000;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      transition: all 0.3s ease;
+    `;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    setTimeout(() => {
+      notification.style.opacity = "0";
+      notification.style.transform = "translateX(100%)";
+      setTimeout(() => notification.remove(), 300);
+    }, 2000);
+  }
+
   hideFloatingBox() {
     if (!this.floatingBox) return;
-    this.floatingBox.style.display = 'none';
+    this.floatingBox.style.display = "none";
     this.isFloatingActive = false;
     this.currentInput = null;
   }
@@ -156,11 +218,20 @@ class SmartInputBox {
   isInputElement(element) {
     if (!element) return false;
     const tagName = element.tagName.toLowerCase();
-    const type = element.type ? element.type.toLowerCase() : '';
+    const type = element.type ? element.type.toLowerCase() : "";
     return (
-      tagName === 'textarea' ||
-      (tagName === 'input' && ['text', 'password', 'email', 'search', 'tel', 'url', 'number'].includes(type)) ||
-      element.contentEditable === 'true' ||
+      tagName === "textarea" ||
+      (tagName === "input" &&
+        [
+          "text",
+          "password",
+          "email",
+          "search",
+          "tel",
+          "url",
+          "number",
+        ].includes(type)) ||
+      element.contentEditable === "true" ||
       element.isContentEditable
     );
   }
@@ -180,19 +251,19 @@ class SmartInputBox {
 
   showFloatingBox() {
     if (!this.floatingBox) return;
-    this.floatingBox.style.display = 'block';
+    this.floatingBox.style.display = "block";
     this.isFloatingActive = true;
-    this.floatingBox.style.opacity = '0';
-    this.floatingBox.style.transform = 'translateX(-50%) translateY(-10px)';
+    this.floatingBox.style.opacity = "0";
+    this.floatingBox.style.transform = "translateX(-50%) translateY(-10px)";
     setTimeout(() => {
-      this.floatingBox.style.transition = 'all 0.2s ease-out';
-      this.floatingBox.style.opacity = '1';
-      this.floatingBox.style.transform = 'translateX(-50%) translateY(0)';
+      this.floatingBox.style.transition = "all 0.2s ease-out";
+      this.floatingBox.style.opacity = "1";
+      this.floatingBox.style.transform = "translateX(-50%) translateY(0)";
     }, 10);
   }
 }
 
-if (typeof browser === 'undefined') {
+if (typeof browser === "undefined") {
   window.browser = chrome;
 }
 
