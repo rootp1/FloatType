@@ -147,22 +147,23 @@ class SmartInputBox {
         if (this.currentInput) {
           this.currentInput.focus();
         }
+        return;
       }
+
       if (e.key === "Enter" && !e.shiftKey) {
-        if (
-          this.currentInput &&
-          this.currentInput.tagName.toLowerCase() === "input"
-        ) {
-          e.preventDefault();
-          this.syncToOriginal();
-          const enterEvent = new KeyboardEvent("keydown", {
-            key: "Enter",
-            keyCode: 13,
-            which: 13,
-            bubbles: true,
-          });
-          this.currentInput.dispatchEvent(enterEvent);
-        }
+        e.preventDefault();
+        this.syncToOriginal();
+
+        const enterEvent = new KeyboardEvent("keydown", {
+          key: "Enter",
+          code: "Enter",
+          keyCode: 13,
+          which: 13,
+          bubbles: true,
+        });
+        this.currentInput.dispatchEvent(enterEvent);
+
+        this.hideFloatingBox();
       }
     });
     this.floatingBox.addEventListener("click", (e) => {
