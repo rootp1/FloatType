@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", function () {
-
   const enabledToggle = document.getElementById("enabled-toggle");
   const modeSection = document.getElementById("mode-section");
   const apiSection = document.getElementById("api-section");
@@ -32,5 +31,43 @@ document.addEventListener("DOMContentLoaded", function () {
       };
       updateUI();
     });
+  }
+  function updateUI() {
+    enabledToggle.checked = currentState.enabled;
+    if (currentState.enabled) {
+      statusDot.classList.add("active");
+      statusIndicator.innerHTML = `
+            <div class="status-dot active"></div>
+            <span>Active</span>
+        `;
+    } else {
+      statusDot.classList.remove("active");
+      statusIndicator.innerHTML = `
+            <div class="status-dot"></div>
+            <span>Inactive</span>
+        `;
+    }
+    if (currentState.enabled) {
+      modeSection.classList.remove("disabled");
+    } else {
+      modeSection.classList.add("disabled");
+    }
+    if (currentState.mode === "habit") {
+      habitModeRadio.checked = true;
+      selectModeCard("habit");
+    } else if (currentState.mode === "advanced") {
+      advancedModeRadio.checked = true;
+      selectModeCard("advanced");
+    } else {
+      habitModeRadio.checked = false;
+      advancedModeRadio.checked = false;
+      clearModeCardSelections();
+    }
+    if (currentState.mode === "advanced" && currentState.enabled) {
+      apiSection.classList.remove("hidden");
+    } else {
+      apiSection.classList.add("hidden");
+    }
+    apiKeyInput.value = currentState.apiKey;
   }
 });
