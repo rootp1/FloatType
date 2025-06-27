@@ -160,3 +160,15 @@ document.addEventListener("DOMContentLoaded", function () {
     apiKeyInput.value = currentState.apiKey;
   }
 });
+
+function selectModeCard(mode) {
+    clearModeCardSelections();
+    const card = document.querySelector(`[data-mode="${mode}"]`);
+    if (card) {
+        card.classList.add('selected');
+    }
+}
+
+function clearModeCardSelections() {
+    modeCards.forEach(card => card.classList.remove('selected'));
+}
