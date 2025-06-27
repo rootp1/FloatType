@@ -124,3 +124,81 @@ body {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.5; }
 }
+.main-controls {
+    padding: 24px 20px;
+}
+
+.toggle-section {
+    margin-bottom: 24px;
+}
+
+.toggle-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 500;
+    font-size: 14px;
+    color: #374151;
+}
+
+.toggle-switch {
+    position: relative;
+    width: 48px;
+    height: 24px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #e5e7eb;
+    border-radius: 24px;
+    transition: all 0.3s ease;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 2px;
+    bottom: 2px;
+    background: white;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+input:checked + .slider {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+}
+
+input:checked + .slider:before {
+    transform: translateX(24px);
+}
+
+.mode-section {
+    margin-bottom: 24px;
+}
+
+.mode-section h3 {
+    font-size: 14px;
+    color: #374151;
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+
+.mode-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
