@@ -310,3 +310,12 @@ function runAdvancedMode() {
   });
   input.focus();
 }
+
+function updateAIStatus(status, text) {
+  const statusElement = document.querySelector('.ai-status span');
+  const indicator = document.querySelector('.ai-indicator');
+  if (statusElement) statusElement.textContent = text;
+  if (indicator) {
+    indicator.className = `ai-indicator ${status}`;
+  }
+}
