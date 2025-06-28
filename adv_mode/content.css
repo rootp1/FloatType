@@ -79,3 +79,95 @@
 .smart-input-box .input-container {
   padding: 0 20px 16px;
 }
+
+.smart-input-box #custom-input {
+  width: 100%;
+  min-height: 80px;
+  max-height: 200px;
+  border: none;
+  outline: none;
+  resize: none;
+  font-size: 14px;
+  line-height: 1.5;
+  font-family: inherit;
+  background: transparent;
+  color: #374151;
+  padding: 12px 0;
+}
+
+.smart-input-box #custom-input::placeholder {
+  color: #9ca3af;
+}
+
+.smart-input-box #custom-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.smart-input-box .input-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 8px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  font-size: 11px;
+}
+
+.smart-input-box .sync-indicator,
+.smart-input-box .ai-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.smart-input-box .sync-dot,
+.smart-input-box .ai-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #d1d5db;
+  transition: all 0.3s ease;
+}
+
+.smart-input-box .sync-indicator.active .sync-dot {
+  background: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+  animation: pulse-success 1s ease-out;
+}
+
+.smart-input-box .ai-indicator.processing {
+  background: #f59e0b;
+  animation: pulse-warning 1s infinite;
+}
+
+.smart-input-box .ai-indicator.success {
+  background: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+.smart-input-box .ai-indicator.error {
+  background: #ef4444;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+}
+
+.smart-input-box .ai-indicator.ready {
+  background: #3b82f6;
+}
+
+.smart-input-box .shortcuts {
+  color: #9ca3af;
+  font-size: 10px;
+}
+
+@keyframes pulse-success {
+  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+  70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+@keyframes pulse-warning {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
