@@ -270,3 +270,43 @@ function runAdvancedMode() {
         <div class="shortcuts">Enter to process • css: for styles</div>
       </div>
     </div>
+  `;
+  document.body.appendChild(inputBox);
+  const input = document.getElementById('custom-input');
+  setTimeout(() => inputBox.classList.add('visible'), 10);
+  input.addEventListener('keydown', async (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const command = input.value.trim();
+      if (!command) return;
+      input.disabled = true;
+      updateAIStatus('processing', 'Processing...');
+      try {
+        const result = await processGeminiCommand(command);
+        if (command.startsWith('css:')) {
+          const style = document.createElement('style');
+          style.textContent = result;
+          style.id = 'smart-input-generated-css';
+          const existing = document.getElementById('smart-input-generated-css');
+          if (existing) existing.remove();
+          document.head.appendChild(style);
+          updateAIStatus('success', 'CSS Applied!');
+          showNotification('CSS styles have been applied to the page!', 'success');
+        } else {
+          updateAIStatus('complete', 'Complete');
+          showNotification(result, 'info');
+        }
+      } catch (error) {
+        updateAIStatus('error', 'Error');
+        showNotification('Error: ' + error.message, 'error');
+      }
+      input.disabled = false;
+      input.value = '';
+      setTimeout(() => updateAIStatus('ready', 'Ready'), 2000);
+    }
+    if (e.key === 'Escape') {
+      inputBox.remove();
+    }
+  });
+  input.focus();
+}
