@@ -38,3 +38,201 @@ function cleanupModes() {
   }
   document.body.classList.remove('custom-input-active');
 }
+
+function runHabitMode() {
+  console.log('Smart Input Assistant: Habit Mode activated');
+  function renderInputBox() {
+    if (document.getElementById('custom-input-box') || !activeElement) return;
+    const inputBox = document.createElement('div');
+    inputBox.id = 'custom-input-box';
+    inputBox.className = 'smart-input-box habit-mode';
+    inputBox.innerHTML = `
+      <div class="input-header">
+        <div class="mode-badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M15 3H21V9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M9 21H3V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M21 3L13.5 10.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M10.5 13.5L3 21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Habit Mode
+        </div>
+        <button class="close-btn" id="custom-close-btn" title="Close (Esc)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="input-container">
+        <textarea id="custom-input" placeholder="Enhanced typing mode - your text syncs automatically..."></textarea>
+        <div class="input-footer">
+          <div class="sync-indicator">
+            <div class="sync-dot"></div>
+            <span>Synced</span>
+          </div>
+          <div class="shortcuts">Enter to send • Esc to close</div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(inputBox);
+    document.body.classList.add('custom-input-active');
+    document.getElementById('custom-close-btn').onclick = closeInputBox;
+    customInput = document.getElementById('custom-input');
+    customInput.addEventListener('input', handleCustomInput);
+    customInput.addEventListener('keydown', handleKeyDown);
+    syncState();
+    customInput.focus();
+    adjustSize(customInput);
+    startSyncLoop();
+    startObserver();
+    setTimeout(() => inputBox.classList.add('visible'), 10);
+  }
+  function closeInputBox() {
+    const inputBox = document.getElementById('custom-input-box');
+    if (inputBox) {
+      inputBox.classList.add('closing');
+      setTimeout(() => {
+        inputBox.remove();
+        activeElement = null;
+        customInput = null;
+        if (observer) observer.disconnect();
+        if (syncTimeout) clearTimeout(syncTimeout);
+        document.body.classList.remove('custom-input-active');
+      }, 200);
+    }
+  }
+  function handleCustomInput(e) {
+    if (!activeElement || isWhatsApp) return;
+    const newValue = e.target.value;
+    if (activeElement.isContentEditable) {
+      activeElement.textContent = newValue;
+    } else {
+      activeElement.value = newValue;
+    }
+    activeElement.dispatchEvent(new Event('input', { bubbles: true }));
+    lastCustomValue = newValue;
+    adjustSize(customInput);
+    updateSyncIndicator();
+  }
+  function handleKeyDown(event) {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeInputBox();
+      return;
+    }
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      if (isWhatsApp) {
+        handleWhatsAppSend();
+      } else {
+        if (activeElement) {
+          const enterEvent = new KeyboardEvent('keydown', {
+            bubbles: true,
+            key: 'Enter',
+            code: 'Enter'
+          });
+          activeElement.dispatchEvent(enterEvent);
+        }
+      }
+    }
+  }
+  function handleWhatsAppSend() {
+    const message = customInput.value.trim();
+    if (!message) return;
+    let waInput = document.querySelector('[contenteditable="true"][data-tab="10"]');
+    if (!waInput) {
+      waInput = Array.from(document.querySelectorAll('[contenteditable="true"]'))
+        .find(el => el.getAttribute('aria-label')?.toLowerCase().includes('type a message'));
+    }
+    if (!waInput) return;
+    waInput.focus();
+    document.execCommand('selectAll', false, null);
+    document.execCommand('delete', false, null);
+    const success = document.execCommand('insertText', false, message);
+    if (!success || waInput.textContent.trim() !== message) {
+      waInput.textContent = message;
+    }
+    waInput.dispatchEvent(new InputEvent('input', {
+      bubbles: true,
+      cancelable: true,
+      inputType: 'insertText',
+      data: message
+    }));
+    const fireEnter = () => {
+      const down = new KeyboardEvent('keydown', { bubbles: true, key: 'Enter', code: 'Enter' });
+      const up = new KeyboardEvent('keyup', { bubbles: true, key: 'Enter', code: 'Enter' });
+      waInput.dispatchEvent(down);
+      waInput.dispatchEvent(up);
+    };
+    fireEnter();
+    setTimeout(fireEnter, 100);
+    customInput.value = '';
+    lastCustomValue = '';
+    adjustSize(customInput);
+  }
+  function adjustSize(textarea) {
+    textarea.style.height = 'auto';
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`;
+  }
+  function syncState() {
+    if (activeElement && customInput) {
+      const val = activeElement.value || activeElement.textContent || '';
+      if (customInput.value !== val) {
+        customInput.value = val;
+        adjustSize(customInput);
+        lastCustomValue = val;
+      }
+    }
+  }
+  function startSyncLoop() {
+    if (syncTimeout) clearTimeout(syncTimeout);
+    syncTimeout = setTimeout(() => {
+      if (state.mode === 'habit' && customInput) {
+        syncState();
+        startSyncLoop();
+      }
+    }, 100);
+  }
+  function startObserver() {
+    if (observer) observer.disconnect();
+    if (activeElement?.isContentEditable) {
+      observer = new MutationObserver(() => {
+        if (customInput && customInput.value !== (activeElement.textContent || '')) {
+          customInput.value = activeElement.textContent || '';
+          adjustSize(customInput);
+        }
+      });
+      observer.observe(activeElement, { childList: true, characterData: true, subtree: true });
+    }
+  }
+  function updateSyncIndicator() {
+    const indicator = document.querySelector('.sync-indicator');
+    if (indicator) {
+      indicator.classList.add('active');
+      setTimeout(() => indicator.classList.remove('active'), 1000);
+    }
+  }
+  document.addEventListener('focusin', (e) => {
+    if (state.mode === 'habit' && state.enabled) {
+      const target = e.target;
+      if ((target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) 
+          && !target.closest('#custom-input-box')) {
+        activeElement = target.closest('.copyable-text.selectable-text') || 
+                       target.closest('.copyable-text') || 
+                       target;
+        renderInputBox();
+      }
+    }
+  });
+  document.addEventListener('focusout', () => {
+    if (state.mode !== 'habit') {
+      closeInputBox();
+    }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.getElementById('custom-input-box')) {
+      closeInputBox();
+    }
+  });
+}
