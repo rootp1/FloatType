@@ -236,3 +236,37 @@ function runHabitMode() {
     }
   });
 }
+
+function runAdvancedMode() {
+  console.log('Smart Input Assistant: Advanced Mode activated');
+  const inputBox = document.createElement('div');
+  inputBox.id = 'custom-input-box';
+  inputBox.className = 'smart-input-box advanced-mode';
+  inputBox.innerHTML = `
+    <div class="input-header">
+      <div class="mode-badge">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9.75 17L9 20L20 20L19.25 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M3 13H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M12 4V12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M8 4L16 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        AI Mode
+      </div>
+      <button class="close-btn" onclick="this.parentElement.parentElement.remove()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+    <div class="input-container">
+      <textarea id="custom-input" placeholder="Ask AI: 'summarize this page' or 'css: make a blue button'"></textarea>
+      <div class="input-footer">
+        <div class="ai-status">
+          <div class="ai-indicator"></div>
+          <span>Ready</span>
+        </div>
+        <div class="shortcuts">Enter to process • css: for styles</div>
+      </div>
+    </div>
