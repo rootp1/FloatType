@@ -352,3 +352,22 @@ async function processGeminiCommand(text) {
   }
   return result;
 }
+
+function showNotification(message, type = 'info') {
+  const notification = document.createElement('div');
+  notification.className = `smart-input-notification ${type}`;
+  notification.innerHTML = `
+    <div class="notification-content">
+      <div class="notification-icon">
+        ${type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ'}
+      </div>
+      <div class="notification-message">${message}</div>
+    </div>
+  `;
+  document.body.appendChild(notification);
+  setTimeout(() => notification.classList.add('visible'), 10);
+  setTimeout(() => {
+    notification.classList.add('hiding');
+    setTimeout(() => notification.remove(), 300);
+  }, 4000);
+}
