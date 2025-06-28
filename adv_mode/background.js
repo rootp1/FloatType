@@ -40,3 +40,42 @@ function updateBadge(enabled) {
     });
   }
 }
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+  console.log("Smart Input Assistant: Message received:", request);
+  switch (request.action) {
+    case "getSettings":
+      chrome.storage.local.get(
+        ["enabled", "mode", "apiKey"],
+        function (result) {
+          sendResponse({
+            enabled: result.enabled || false,
+            mode: result.mode || "off",
+            apiKey: result.apiKey || "",
+          });
+        }
+      );
+      return true;
+    case "updateSettings":
+      chrome.storage.local.set(request.settings, function () {
+        updateBadge(request.settings.enabled);
+        sendResponse({ success: true });
+      });
+      return true;
+    case "showNotification":
+      chrome.notifications.create({
+        type: "basic",
+        iconUrl: "icons/icon48.png",
+        title: request.title || "Smart Input Assistant",
+        message: request.message,
+      });
+      sendResponse({ success: true });
+      break;
+    case "logError":
+      console.error("Smart Input Assistant Error:", request.error);
+      sendResponse({ success: true });
+      break;
+    default:
+      console.log("Smart Input Assistant: Unknown action:", request.action);
+      sendResponse({ error: "Unknown action" });
+  }
+});
