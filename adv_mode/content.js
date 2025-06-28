@@ -319,3 +319,36 @@ function updateAIStatus(status, text) {
     indicator.className = `ai-indicator ${status}`;
   }
 }
+
+async function processGeminiCommand(text) {
+  const key = state.apiKey;
+  if (!key) {
+    throw new Error('API key missing. Please configure it in the extension popup.');
+  }
+  let prompt = '';
+  if (text.startsWith('css:')) {
+    prompt = 'Generate only valid CSS code (no explanations, no markdown, no code blocks) based on this description: ' + text.replace(/^css:/i, '').trim();
+  } else {
+    prompt = 'Provide a concise summary or response to: ' + text;
+  }
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { 
+        temperature: 0.7, 
+        maxOutputTokens: text.startsWith('css:') ? 512 : 256 
+      }
+    })
+  });
+  if (!response.ok) {
+    throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+  }
+  const data = await response.json();
+  const result = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!result) {
+    throw new Error('No response from AI');
+  }
+  return result;
+}
