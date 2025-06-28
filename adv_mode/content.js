@@ -20,3 +20,21 @@ function updateState(newState) {
     }
   }
 }
+
+function cleanupModes() {
+  const existingBox = document.getElementById('custom-input-box');
+  if (existingBox) {
+    existingBox.remove();
+  }
+  activeElement = null;
+  customInput = null;
+  if (observer) {
+    observer.disconnect();
+    observer = null;
+  }
+  if (syncTimeout) {
+    clearTimeout(syncTimeout);
+    syncTimeout = null;
+  }
+  document.body.classList.remove('custom-input-active');
+}
