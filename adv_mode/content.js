@@ -371,3 +371,11 @@ function showNotification(message, type = 'info') {
     setTimeout(() => notification.remove(), 300);
   }, 4000);
 }
+
+chrome.storage.local.get(['enabled', 'mode', 'apiKey'], (result) => {
+  updateState({
+    enabled: result.enabled || false,
+    mode: result.mode || 'off',
+    apiKey: result.apiKey || ''
+  });
+});
