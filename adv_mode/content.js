@@ -379,3 +379,11 @@ chrome.storage.local.get(['enabled', 'mode', 'apiKey'], (result) => {
     apiKey: result.apiKey || ''
   });
 });
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === 'updateState') {
+    updateState(message.state);
+    sendResponse({ status: 'ok' });
+  }
+  return true;
+});
