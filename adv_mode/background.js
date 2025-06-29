@@ -111,3 +111,16 @@ chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
     });
   }
 });
+
+fetch(chrome.runtime.getURL('adv_mode/.env'))
+  .then(response => response.text())
+  .then(text => {
+    const match = text.match(/^GEMINI_API_KEY\s*=\s*(.+)$/m);
+    if (match) {
+      chrome.storage.local.set({ apiKey: match[1].trim() });
+      console.log('Smart Input Assistant: API key loaded from .env');
+    }
+  })
+  .catch(err => {
+    console.warn('Smart Input Assistant: Could not load .env file', err);
+  });
