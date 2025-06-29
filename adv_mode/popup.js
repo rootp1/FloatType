@@ -1,13 +1,10 @@
 document.addEventListener("DOMContentLoaded", function () {
   const enabledToggle = document.getElementById("enabled-toggle");
   const modeSection = document.getElementById("mode-section");
-  const apiSection = document.getElementById("api-section");
   const statusIndicator = document.getElementById("status-indicator");
   const statusDot = statusIndicator.querySelector(".status-dot");
   const habitModeRadio = document.getElementById("habit-mode");
   const advancedModeRadio = document.getElementById("advanced-mode");
-  const apiKeyInput = document.getElementById("api-key");
-  const toggleApiVisibility = document.getElementById("toggle-api-visibility");
   const saveButton = document.getElementById("save-settings");
   const resetButton = document.getElementById("reset-settings");
   const modeCards = document.querySelectorAll(".mode-card");
@@ -15,7 +12,6 @@ document.addEventListener("DOMContentLoaded", function () {
   let currentState = {
     enabled: false,
     mode: "off",
-    apiKey: "",
   };
 
   loadSettings();
@@ -23,11 +19,10 @@ document.addEventListener("DOMContentLoaded", function () {
   updateUI();
 
   function loadSettings() {
-    chrome.storage.local.get(["enabled", "mode", "apiKey"], function (result) {
+    chrome.storage.local.get(["enabled", "mode"], function (result) {
       currentState = {
         enabled: result.enabled || false,
         mode: result.mode || "off",
-        apiKey: result.apiKey || "",
       };
       updateUI();
     });
@@ -64,12 +59,6 @@ document.addEventListener("DOMContentLoaded", function () {
       advancedModeRadio.checked = false;
       clearModeCardSelections();
     }
-    if (currentState.mode === "advanced" && currentState.enabled) {
-      apiSection.classList.remove("hidden");
-    } else {
-      apiSection.classList.add("hidden");
-    }
-    apiKeyInput.value = currentState.apiKey;
   }
 
   function selectModeCard(mode) {
@@ -126,33 +115,6 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     });
 
-    apiKeyInput.addEventListener("input", function () {
-      currentState.apiKey = this.value;
-    });
-
-    apiKeyInput.addEventListener("blur", function () {
-      saveSettings();
-    });
-
-    toggleApiVisibility.addEventListener("click", function () {
-      const input = apiKeyInput;
-      const icon = this.querySelector("svg");
-      if (input.type === "password") {
-        input.type = "text";
-        icon.innerHTML = `
-                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20C7 20 2.73 16.39 1 12A18.45 18.45 0 0 1 5.06 5.06L17.94 17.94Z" stroke="currentColor" stroke-width="2"/>
-                    <path d="M1 1L23 23" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
-                `;
-      } else {
-        input.type = "password";
-        icon.innerHTML = `
-                    <path d="M1 12S5 4 12 4S23 12 23 12S19 20 12 20S1 12 1 12Z" stroke="currentColor" stroke-width="2"/>
-                    <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
-                `;
-      }
-    });
-
     saveButton.addEventListener("click", function () {
       saveSettings();
       showNotification("Settings saved successfully!", "success");
@@ -163,7 +125,6 @@ document.addEventListener("DOMContentLoaded", function () {
         currentState = {
           enabled: false,
           mode: "off",
-          apiKey: "",
         };
         updateUI();
         saveSettings();
@@ -177,7 +138,6 @@ document.addEventListener("DOMContentLoaded", function () {
       {
         enabled: currentState.enabled,
         mode: currentState.mode,
-        apiKey: currentState.apiKey,
       },
       function () {
         chrome.tabs.query(
