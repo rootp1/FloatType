@@ -321,24 +321,21 @@ function updateAIStatus(status, text) {
 }
 
 async function processGeminiCommand(text) {
-  const key = state.apiKey;
-  if (!key) {
-    throw new Error('API key missing. Please configure it in the extension popup.');
-  }
+  const key = state.apiKey; // Not needed for proxy, but keep for settings
   let prompt = '';
   if (text.startsWith('css:')) {
     prompt = 'Generate only valid CSS code (no explanations, no markdown, no code blocks) based on this description: ' + text.replace(/^css:/i, '').trim();
   } else {
     prompt = 'Provide a concise summary or response to: ' + text;
   }
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
+  const response = await fetch('http://localhost:3000/gemini-proxy', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { 
-        temperature: 0.7, 
-        maxOutputTokens: text.startsWith('css:') ? 512 : 256 
+      prompt,
+      config: {
+        temperature: 0.7,
+        maxOutputTokens: text.startsWith('css:') ? 512 : 256
       }
     })
   });

@@ -112,7 +112,7 @@ chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
   }
 });
 
-fetch(chrome.runtime.getURL('adv_mode/.env'))
+fetch(chrome.runtime.getURL('.env'))
   .then(response => response.text())
   .then(text => {
     const match = text.match(/^GEMINI_API_KEY\s*=\s*(.+)$/m);
