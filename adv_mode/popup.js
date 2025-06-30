@@ -269,4 +269,8 @@ document.addEventListener("DOMContentLoaded", function () {
   chrome.browserAction.onClicked.addListener(function () {
     showNotification("Extension popup opened!", "info");
   });
+
+  if (apiKeyInput) {
+    apiKeyInput.placeholder = "Optional: Enter your Gemini API key (recommended)";
+  }
 });
