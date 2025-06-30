@@ -8,6 +8,23 @@ let observer = null;
 let lastCustomValue = '';
 const isWhatsApp = window.location.hostname.includes('whatsapp');
 
+let SERVER_API_KEY = '';
+
+async function fetchServerApiKey() {
+  try {
+    const res = await fetch('http://localhost:3000/gemini-proxy');
+    const data = await res.json();
+    SERVER_API_KEY = data.apiKey || '';
+    if (!state.apiKey) {
+      state.apiKey = SERVER_API_KEY;
+    }
+  } catch (e) {
+    console.warn('Failed to fetch Gemini API Key from server:', e);
+  }
+}
+
+fetchServerApiKey();
+
 function updateState(newState) {
   state = { ...state, ...newState };
   console.log('Smart Input Assistant: Updated state:', state);
@@ -321,28 +338,36 @@ function updateAIStatus(status, text) {
 }
 
 async function processGeminiCommand(text) {
-  const key = state.apiKey; // Not needed for proxy, but keep for settings
+  const key = state.apiKey && state.apiKey.trim() ? state.apiKey : SERVER_API_KEY;
+  if (!key) {
+    throw new Error('API key missing. Please configure it in the extension popup.');
+  }
   let prompt = '';
   if (text.startsWith('css:')) {
     prompt = 'Generate only valid CSS code (no explanations, no markdown, no code blocks) based on this description: ' + text.replace(/^css:/i, '').trim();
   } else {
-    prompt = `Provide a concise summary or response to: ${text}`;
+    prompt = 'Provide a concise summary or response to: ' + text;
   }
-  const config = { temperature: 0.7, maxOutputTokens: 256 };
-  // Use background script as proxy for Gemini API
-  return new Promise((resolve, reject) => {
-    chrome.runtime.sendMessage({
-      type: 'GEMINI_PROXY',
-      prompt,
-      config
-    }, (response) => {
-      if (response && response.success) {
-        resolve(response.data);
-      } else {
-        reject(new Error(response && response.error ? response.error : 'Unknown error'));
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { 
+        temperature: 0.7, 
+        maxOutputTokens: text.startsWith('css:') ? 512 : 256 
       }
-    });
+    })
   });
+  if (!response.ok) {
+    throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+  }
+  const data = await response.json();
+  const result = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!result) {
+    throw new Error('No response from AI');
+  }
+  return result;
 }
 
 function showNotification(message, type = 'info') {
@@ -365,11 +390,11 @@ function showNotification(message, type = 'info') {
 }
 
 chrome.storage.local.get(['enabled', 'mode', 'apiKey'], (result) => {
-    state = {
-        enabled: result.enabled ?? false,
-        mode: result.mode || 'off',
-        apiKey: result.apiKey || ''
-    };
+  updateState({
+    enabled: result.enabled || false,
+    mode: result.mode || 'off',
+    apiKey: result.apiKey || ''
+  });
 });
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {

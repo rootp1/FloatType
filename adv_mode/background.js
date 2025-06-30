@@ -82,22 +82,6 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   }
 });
 
-// Listen for Gemini proxy requests from content scripts
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.type === 'GEMINI_PROXY') {
-    fetch('http://localhost:3000/gemini-proxy', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: request.prompt, config: request.config })
-    })
-      .then(response => response.json())
-      .then(data => sendResponse({ success: true, data }))
-      .catch(error => sendResponse({ success: false, error: error.message }));
-    // Return true to indicate async response
-    return true;
-  }
-});
-
 chrome.browserAction.onClicked.addListener(function (tab) {
   console.log("Smart Input Assistant: Browser action clicked");
   chrome.storage.local.get(["enabled"], function (result) {
@@ -127,16 +111,3 @@ chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
     });
   }
 });
-
-fetch(chrome.runtime.getURL('.env'))
-  .then(response => response.text())
-  .then(text => {
-    const match = text.match(/^GEMINI_API_KEY\s*=\s*(.+)$/m);
-    if (match) {
-      chrome.storage.local.set({ apiKey: match[1].trim() });
-      console.log('Smart Input Assistant: API key loaded from .env');
-    }
-  })
-  .catch(err => {
-    console.warn('Smart Input Assistant: Could not load .env file', err);
-  });
