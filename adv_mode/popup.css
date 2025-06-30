@@ -434,3 +434,8 @@ input:checked + .slider:before {
 .container {
     animation: slideIn 0.3s ease-out;
 }
+
+.draggable {
+  cursor: move;
+  user-select: none;
+}

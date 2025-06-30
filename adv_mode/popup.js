@@ -172,6 +172,36 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  // Make the API key input group draggable
+  const draggableGroup = document.getElementById("draggable-api-group");
+  if (draggableGroup) {
+    let isDragging = false;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    draggableGroup.addEventListener("mousedown", function (e) {
+      isDragging = true;
+      const rect = draggableGroup.getBoundingClientRect();
+      offsetX = e.clientX - rect.left;
+      offsetY = e.clientY - rect.top;
+      draggableGroup.style.position = "fixed";
+      draggableGroup.style.zIndex = 9999;
+      document.body.style.userSelect = "none";
+    });
+
+    document.addEventListener("mousemove", function (e) {
+      if (isDragging) {
+        draggableGroup.style.left = e.clientX - offsetX + "px";
+        draggableGroup.style.top = e.clientY - offsetY + "px";
+      }
+    });
+
+    document.addEventListener("mouseup", function () {
+      isDragging = false;
+      document.body.style.userSelect = "";
+    });
+  }
+
   function saveSettings() {
     chrome.storage.local.set(
       {

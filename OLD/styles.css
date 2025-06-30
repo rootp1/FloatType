@@ -3,6 +3,9 @@
 .smart-input-floating-container {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   box-sizing: border-box;
+  resize: both;
+  overflow: auto;
+  cursor: default;
 }
 
 .smart-input-floating-container * {
@@ -23,6 +26,11 @@
 
 .smart-input-floating-container:hover {
   box-shadow: 0 6px 25px rgba(0,0,0,0.18);
+}
+
+.smart-input-floating-container .drag-handle {
+  cursor: move;
+  user-select: none;
 }
 
 /* Responsive design */

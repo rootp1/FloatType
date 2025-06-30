@@ -57,8 +57,11 @@ class SmartInputBox {
       min-width: 400px;
       max-width: 80vw;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      resize: both;
+      overflow: auto;
     `;
     const header = document.createElement("div");
+    header.className = "drag-handle";
     header.style.cssText = `
       display: flex;
       justify-content: space-between;
@@ -66,6 +69,8 @@ class SmartInputBox {
       margin-bottom: 8px;
       font-size: 12px;
       color: #666;
+      cursor: move;
+      user-select: none;
     `;
     const title = document.createElement("span");
     title.textContent = "📝 Smart Input Box (Habit Mode)";
@@ -116,6 +121,32 @@ class SmartInputBox {
     this.floatingBox.appendChild(this.floatingInput);
     this.floatingBox.appendChild(info);
     document.body.appendChild(this.floatingBox);
+
+    // --- Draggable logic ---
+    let isDragging = false;
+    let offsetX = 0;
+    let offsetY = 0;
+    header.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      const rect = this.floatingBox.getBoundingClientRect();
+      offsetX = e.clientX - rect.left;
+      offsetY = e.clientY - rect.top;
+      document.body.style.userSelect = 'none';
+    });
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      this.floatingBox.style.left = `${e.clientX - offsetX}px`;
+      this.floatingBox.style.top = `${e.clientY - offsetY}px`;
+      this.floatingBox.style.right = '';
+      this.floatingBox.style.bottom = '';
+      this.floatingBox.style.transform = '';
+      this.floatingBox.style.position = 'fixed';
+    });
+    document.addEventListener('mouseup', () => {
+      isDragging = false;
+      document.body.style.userSelect = '';
+    });
+    // --- End draggable logic ---
   }
 
   setupEventListeners() {
