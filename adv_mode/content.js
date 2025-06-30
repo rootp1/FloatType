@@ -326,28 +326,23 @@ async function processGeminiCommand(text) {
   if (text.startsWith('css:')) {
     prompt = 'Generate only valid CSS code (no explanations, no markdown, no code blocks) based on this description: ' + text.replace(/^css:/i, '').trim();
   } else {
-    prompt = 'Provide a concise summary or response to: ' + text;
+    prompt = `Provide a concise summary or response to: ${text}`;
   }
-  const response = await fetch('http://localhost:3000/gemini-proxy', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
+  const config = { temperature: 0.7, maxOutputTokens: 256 };
+  // Use background script as proxy for Gemini API
+  return new Promise((resolve, reject) => {
+    chrome.runtime.sendMessage({
+      type: 'GEMINI_PROXY',
       prompt,
-      config: {
-        temperature: 0.7,
-        maxOutputTokens: text.startsWith('css:') ? 512 : 256
+      config
+    }, (response) => {
+      if (response && response.success) {
+        resolve(response.data);
+      } else {
+        reject(new Error(response && response.error ? response.error : 'Unknown error'));
       }
-    })
+    });
   });
-  if (!response.ok) {
-    throw new Error(`API request failed: ${response.status} ${response.statusText}`);
-  }
-  const data = await response.json();
-  const result = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!result) {
-    throw new Error('No response from AI');
-  }
-  return result;
 }
 
 function showNotification(message, type = 'info') {
@@ -370,11 +365,11 @@ function showNotification(message, type = 'info') {
 }
 
 chrome.storage.local.get(['enabled', 'mode', 'apiKey'], (result) => {
-  updateState({
-    enabled: result.enabled || false,
-    mode: result.mode || 'off',
-    apiKey: result.apiKey || ''
-  });
+    state = {
+        enabled: result.enabled ?? false,
+        mode: result.mode || 'off',
+        apiKey: result.apiKey || ''
+    };
 });
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {

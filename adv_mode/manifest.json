@@ -6,7 +6,8 @@
   "permissions": [
     "storage",
     "tabs",
-    "activeTab"
+    "activeTab",
+    "http://localhost:3000/"
   ],
   "background": {
     "scripts": ["background.js"]
@@ -36,7 +37,8 @@
     "adv_mode/.env"
   ],
   "host_permissions": [
-    "<all_urls>"
+    "<all_urls>",
+    "http://localhost:3000/"
   ],
   "options_ui": {
     "page": "options.html"

@@ -82,6 +82,22 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   }
 });
 
+// Listen for Gemini proxy requests from content scripts
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.type === 'GEMINI_PROXY') {
+    fetch('http://localhost:3000/gemini-proxy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: request.prompt, config: request.config })
+    })
+      .then(response => response.json())
+      .then(data => sendResponse({ success: true, data }))
+      .catch(error => sendResponse({ success: false, error: error.message }));
+    // Return true to indicate async response
+    return true;
+  }
+});
+
 chrome.browserAction.onClicked.addListener(function (tab) {
   console.log("Smart Input Assistant: Browser action clicked");
   chrome.storage.local.get(["enabled"], function (result) {
