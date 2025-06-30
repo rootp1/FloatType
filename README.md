@@ -86,5 +86,15 @@ The extension uses a local Node.js server to securely expose your Gemini API key
 
 ---
 
+
+- **Technical Approach for whatsapp web:**
+  - The extension detects when the WhatsApp input field is focused by listening for focus events on input and contenteditable elements.
+  - It injects a custom floating input box overlay, styled to be draggable and resizable using CSS and JavaScript.
+  - The floating box synchronizes its value with the WhatsApp input using DOM events and programmatic value updates.
+  - When Enter is pressed, a synthetic keyboard event is dispatched to WhatsApp's input to trigger message sending.
+  - The solution is robust for WhatsApp Web's dynamic DOM and works for both classic and new WhatsApp layouts.
+
+---
+
 ## License
 MIT
